@@ -139,13 +139,9 @@ export function LoginForm() {
                   aria-describedby={errors.username ? "username-error" : undefined}
                   {...register("username")}
                 />
-                {errors.username ? (
+                {errors.username && (
                   <p id="username-error" className="text-xs text-destructive">
                     {errors.username.message}
-                  </p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Signs in as <span className="font-mono">{`<username>@${domain}`}</span>
                   </p>
                 )}
               </div>
