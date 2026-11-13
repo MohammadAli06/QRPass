@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Printer } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +11,8 @@ import { formatHours } from "@/lib/constants";
 import { subscribeEvent } from "@/lib/firestore/events";
 import { subscribeQrs } from "@/lib/firestore/qrs";
 import { formatDateTime } from "@/lib/format";
-import { mapWithConcurrency, qrDataUrl } from "@/lib/qr";
+import { fileSafeName, mapWithConcurrency, qrDataUrl } from "@/lib/qr";
+import { downloadQrPdfZip } from "@/lib/qr-pdf";
 import type { EventDoc, QrDoc } from "@/types";
 
 export function PrintSheet({ eventId }: { eventId: string }) {
@@ -18,6 +20,7 @@ export function PrintSheet({ eventId }: { eventId: string }) {
   const [qrs, setQrs] = useState<QrDoc[]>([]);
   const [images, setImages] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   useEffect(() => {
     const unsubscribe = subscribeEvent(
@@ -58,24 +61,74 @@ export function PrintSheet({ eventId }: { eventId: string }) {
     };
   }, [qrs]);
 
+  const imagesReady = qrs.length > 0 && qrs.every((qr) => Boolean(images[qr.token]));
+
+  async function handleDownloadPdfs() {
+    if (!event || qrs.length === 0) return;
+    setPdfBusy(true);
+    try {
+      await downloadQrPdfZip(
+        qrs,
+        event,
+        `${fileSafeName(event.name, "event")}-pdf-passes.zip`,
+      );
+      toast.success("Individual PDF passes downloaded");
+    } catch {
+      toast.error("Could not generate the PDF passes");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
-      <div className="no-print flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/admin/events/${eventId}`}>
-            <ArrowLeft aria-hidden="true" />
-            Back to event
-          </Link>
-        </Button>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">
-            {qrs.length} {qrs.length === 1 ? "pass" : "passes"}
-          </span>
-          <Button size="sm" onClick={() => window.print()}>
-            <Printer aria-hidden="true" />
-            Print
+      <div className="no-print flex flex-col gap-2 print:hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/admin/events/${eventId}`}>
+              <ArrowLeft aria-hidden="true" />
+              Back to event
+            </Link>
           </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {qrs.length} {qrs.length === 1 ? "pass" : "passes"}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void handleDownloadPdfs()}
+              disabled={pdfBusy || loading || qrs.length === 0}
+            >
+              {pdfBusy ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <FileText aria-hidden="true" />
+              )}
+              {pdfBusy ? "Preparing PDFs…" : "Download PDFs (ZIP)"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => window.print()}
+              disabled={loading || qrs.length === 0 || !imagesReady}
+            >
+              {qrs.length > 0 && !imagesReady ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <Printer aria-hidden="true" />
+              )}
+              Print all
+            </Button>
+          </div>
         </div>
+        <p className="text-xs text-muted-foreground">
+          <strong className="font-medium text-foreground">Print all</strong> produces a
+          grid for the whole event.{" "}
+          <strong className="font-medium text-foreground">Download PDFs</strong> creates
+          one PDF per participant inside a ZIP, ready to send to each person.
+        </p>
       </div>
 
       <div className="space-y-1">

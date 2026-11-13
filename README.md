@@ -28,8 +28,8 @@ There is no public sign-up. Admins sign in with a username and password.
 - **Three generation modes** — single participant, bulk paste of names, or CSV import (`name`, `email`, `label` + arbitrary extra columns saved as metadata).
 - **Validity windows** — presets (event default, 1/2/7/30 days) or a custom start/end; extend a pass later.
 - **Pass management** — search, filter by state, revoke/restore, edit details, delete, and bulk actions.
-- **Bulk export** — download a ZIP of PNGs named after participants, or export a CSV of links and statuses.
-- **Printable sheet** — `/admin/events/<id>/print` renders a grid of QR codes with names, ready for the browser's print dialog.
+- **Bulk export** — download a ZIP of PNGs, a ZIP of individual PDF passes (one file per participant, ready to forward), or export a CSV of links and statuses.
+- **Printable sheet** — `/admin/events/<id>/print` renders a grid of QR codes with names for the browser's print dialog, and can download one PDF per participant as a ZIP.
 - **Custom verification copy** — separate title, message and tone (success / warning / error / neutral) for all six states, with a live preview.
 - **Configurable visible fields** — show or hide name, email, label, valid-until, event name and any custom metadata key.
 - **Server-side verification** — Firebase Admin SDK, Firestore transactions, scan history and single-use enforcement.
@@ -267,7 +267,7 @@ State priority: **revoked → used (single-use) → not yet valid → expired �
 - **Real-time lists load every pass for an event.** Comfortable up to a few thousand passes per event; add pagination for larger events.
 - **Bulk generation is capped at 2,000 passes per action** and Firestore batches are limited to 400 writes.
 - **Deleting an event or many passes happens in the browser** and removes scan history in batches; very large collections take a while.
-- **No PDF export.** The print sheet uses the browser's print-to-PDF instead.
+- **PDF passes use the built-in Helvetica font**, so participant names in non-Latin scripts may not render correctly in generated PDFs. The PNG, CSV and web verification versions handle Unicode normally.
 - **Datetimes** are stored as instants and entered in the admin's local timezone. Public display uses the viewer's locale.
 
 ## Design decisions

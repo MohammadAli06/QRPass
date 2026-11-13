@@ -1,0 +1,9 @@
+name,email,label,seat,zone
+Alex Morgan,alex.morgan@example.com,VIP,A12,North
+Sam Rivera,sam.rivera@example.com,Speaker,B04,Main
+Jordan Lee,jordan.lee@example.com,Staff,C21,South
+Priya Patel,priya.patel@example.com,General,D08,East
+Mateo Garcia,mateo.garcia@example.com,General,E17,West
+Aisha Khan,aisha.khan@example.com,VIP,A05,North
+Noah Chen,noah.chen@example.com,Volunteer,F12,Main
+Elena Rossi,elena.rossi@example.com,Press,G03,South

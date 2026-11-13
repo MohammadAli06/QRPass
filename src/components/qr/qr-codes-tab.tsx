@@ -9,6 +9,7 @@ import {
   Eye,
   FileArchive,
   FileDown,
+  FileText,
   Loader2,
   MoreHorizontal,
   Pencil,
@@ -69,6 +70,7 @@ import {
   downloadQrZip,
   fileSafeName,
 } from "@/lib/qr";
+import { downloadQrPdf, downloadQrPdfZip } from "@/lib/qr-pdf";
 import type { EventDoc, QrDoc, QrState } from "@/types";
 
 type StateFilter = QrState | "all";
@@ -91,6 +93,7 @@ export function QrCodesTab({ event, qrs, loading }: QrCodesTabProps) {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [zipBusy, setZipBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -244,11 +247,36 @@ export function QrCodesTab({ event, qrs, loading }: QrCodesTabProps) {
         selectedQrs.map((qr) => ({ token: qr.token, name: qr.name })),
         `${fileSafeName(event.name, "event")}-passes.zip`,
       );
-      toast.success("ZIP downloaded");
+      toast.success("PNG ZIP downloaded");
     } catch {
       toast.error("Could not build the ZIP file");
     } finally {
       setZipBusy(false);
+    }
+  }
+
+  async function handlePdfZip() {
+    if (selectedQrs.length === 0) return;
+    setPdfBusy(true);
+    try {
+      await downloadQrPdfZip(
+        selectedQrs,
+        event,
+        `${fileSafeName(event.name, "event")}-pdf-passes.zip`,
+      );
+      toast.success("PDF passes downloaded");
+    } catch {
+      toast.error("Could not generate the PDF passes");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
+  async function downloadPdf(qr: QrDoc) {
+    try {
+      await downloadQrPdf(qr, event);
+    } catch {
+      toast.error("Could not generate the PDF pass");
     }
   }
 
@@ -346,7 +374,20 @@ export function QrCodesTab({ event, qrs, loading }: QrCodesTabProps) {
             ) : (
               <FileArchive aria-hidden="true" />
             )}
-            Download ZIP
+            Download PNGs
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void handlePdfZip()}
+            disabled={pdfBusy || busy}
+          >
+            {pdfBusy ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <FileText aria-hidden="true" />
+            )}
+            Download PDFs
           </Button>
           <Button variant="outline" size="sm" onClick={handleExportCsv} disabled={busy}>
             <FileDown aria-hidden="true" />
@@ -485,6 +526,10 @@ export function QrCodesTab({ event, qrs, loading }: QrCodesTabProps) {
                         <DropdownMenuItem onSelect={() => void downloadPng(qr)}>
                           <Download aria-hidden="true" />
                           Download PNG
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => void downloadPdf(qr)}>
+                          <FileText aria-hidden="true" />
+                          Download PDF
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onSelect={() => setExtendToken(qr.token)}>
