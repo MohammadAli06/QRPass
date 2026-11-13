@@ -1,0 +1,47 @@
+name: Bug report
+description: Report something that is not working as expected
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please do not include credentials or service-account keys.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create an event...
+        2. Generate 10 passes...
+        3. Scan the link...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS and whether this is local or deployed.
+      placeholder: Chrome 130 on macOS 15, deployed on Vercel
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Redact any secrets, tokens or personal data.
+    validations:
+      required: false
